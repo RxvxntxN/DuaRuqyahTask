@@ -5,7 +5,7 @@ import axios from "axios";
 import {Accordion, AccordionItem} from "@heroui/react";
 import MainContent from "./MainContents";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_URL = "/api/proxy?path=";
 
 export const SearchIcon = (props) => {
   return (
@@ -54,7 +54,7 @@ export default function CategoriesPage() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const res = await axios.get(`${API_URL}/categories`);
+        const res = await axios.get(`${API_URL}categories`);
         if (res.data && Array.isArray(res.data)) {
           setCategories(res.data);
         } else {
@@ -82,7 +82,7 @@ export default function CategoriesPage() {
 
     try {
       const res = await axios.get(
-        `${API_URL}/categories/${categoryId}/subcategories`
+        `${API_URL}categories/${categoryId}/subcategories`
       );
       if (res.data && Array.isArray(res.data)) {
         setSubcategories((prev) => ({
@@ -112,7 +112,7 @@ export default function CategoriesPage() {
 
     try {
       const res = await axios.get(
-        `${API_URL}/subcategories/${subcategoryId}/duas`
+        `${API_URL}subcategories/${subcategoryId}/duas`
       );
       if (res.data && Array.isArray(res.data)) {
         setDuas((prev) => ({
@@ -156,7 +156,7 @@ export default function CategoriesPage() {
     try {
       try {
         const res = await axios.get(
-          `${API_URL}/search?q=${encodeURIComponent(query)}`
+          `${API_URL}search?q=${encodeURIComponent(query)}`
         );
         if (res.data && Array.isArray(res.data)) {
           setSearchResults(res.data);
