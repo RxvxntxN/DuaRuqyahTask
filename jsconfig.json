@@ -1,0 +1,31 @@
+// jsconfig.json
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "baseUrl": ".", // Set the base directory to the project root.
+    "paths": {
+      "@/*": ["src/*"] // Map @ to the src folder for imports.
+    }
+  },
+  "include": [
+    "src/**/*", // Include all files inside the src folder.
+    "next-env.d.ts", // Include Next.js types for TypeScript support.
+    "node_modules", // Optional: You can include node_modules if needed.
+    ".next/types/**/*.ts" // Include types for Next.js builds.
+  ],
+  "exclude": [
+    "node_modules" // Exclude the node_modules folder.
+  ]
+}
