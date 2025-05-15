@@ -9,26 +9,7 @@ const nextConfig = {
       "ugc.same-assets.com",
     ],
     remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "source.unsplash.com",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
-        hostname: "images.unsplash.com",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
-        hostname: "ext.same-assets.com",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
-        hostname: "ugc.same-assets.com",
-        pathname: "/**",
-      },
+      // ... (keep your existing patterns)
     ],
   },
   typescript: {
@@ -37,13 +18,13 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  // Add the webpack customization here:
   webpack: (config) => {
     config.externals.push({
       "better-sqlite3": "commonjs better-sqlite3",
     });
     return config;
   },
+  // Remove the turbopack configuration completely
 };
 
 module.exports = nextConfig;

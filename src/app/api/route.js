@@ -4,7 +4,6 @@ export async function GET(request) {
   const {searchParams} = new URL(request.url);
   const path = searchParams.get("path") || "";
 
-  // Your deployed API URL (set this in Vercel environment variables)
   const API_URL = process.env.API_URL || "http://localhost:3001";
 
   try {

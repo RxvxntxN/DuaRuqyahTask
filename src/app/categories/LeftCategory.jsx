@@ -5,38 +5,44 @@ import axios from "axios";
 import {Accordion, AccordionItem} from "@heroui/react";
 import MainContent from "./MainContents";
 
-// Update this to use the Next.js API routes directly
-const API_URL = "/api/";
+// Updated API_URL configuration with debugging
+const API_URL =
+  process.env.NODE_ENV === "development"
+    ? "http://localhost:3001/api"
+    : process.env.NEXT_PUBLIC_VERCEL_URL
+    ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}/api`
+    : "/api";
 
-export const SearchIcon = (props) => {
-  return (
-    <svg
-      aria-hidden="true"
-      fill="none"
-      focusable="false"
-      height="1em"
-      role="presentation"
-      viewBox="0 0 24 24"
-      width="1em"
-      {...props}
-    >
-      <path
-        d="M11.5 21C16.7467 21 21 16.7467 21 11.5C21 6.25329 16.7467 2 11.5 2C6.25329 2 2 6.25329 2 11.5C2 16.7467 6.25329 21 11.5 21Z"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="2"
-      />
-      <path
-        d="M22 22L20 20"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="2"
-      />
-    </svg>
-  );
-};
+console.log("Current API_URL:", API_URL);
+console.log("NODE_ENV:", process.env.NODE_ENV);
+
+export const SearchIcon = (props) => (
+  <svg
+    aria-hidden="true"
+    fill="none"
+    focusable="false"
+    height="1em"
+    role="presentation"
+    viewBox="0 0 24 24"
+    width="1em"
+    {...props}
+  >
+    <path
+      d="M11.5 21C16.7467 21 16.7467 16.7467 21 11.5C21 6.25329 16.7467 2 11.5 2C6.25329 2 2 6.25329 2 11.5C2 16.7467 6.25329 21 11.5 21Z"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
+    />
+    <path
+      d="M22 22L20 20"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
+    />
+  </svg>
+);
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState([]);
@@ -55,19 +61,41 @@ export default function CategoriesPage() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const res = await axios.get(`${API_URL}categories`);
-        if (res.data && Array.isArray(res.data)) {
+        console.log("Fetching categories from:", `${API_URL}/categories`);
+
+        // Add timeout to the axios request
+        const res = await axios.get(`${API_URL}/categories`, {
+          timeout: 10000, // 10 seconds timeout
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+        });
+
+        console.log("Categories response:", res.data);
+
+        if (Array.isArray(res.data)) {
           setCategories(res.data);
         } else {
           throw new Error("Invalid response format for categories");
         }
       } catch (err) {
-        setError(
-          err.response?.data?.message ||
-            err.message ||
-            "Failed to load categories"
-        );
-        console.error("Category loading error:", err);
+        console.error("Full error object:", err);
+
+        // More detailed error handling
+        if (err.code === "ECONNABORTED") {
+          setError("Request timeout - server did not respond in time");
+        } else if (err.code === "ERR_NETWORK") {
+          setError(
+            "Network error - cannot connect to server. Make sure your backend is running on port 3001"
+          );
+        } else {
+          setError(
+            err.response?.data?.message ||
+              err.message ||
+              "Failed to load categories"
+          );
+        }
       } finally {
         setLoading(false);
       }
@@ -82,19 +110,20 @@ export default function CategoriesPage() {
     setLoadingSubcategories(categoryId);
 
     try {
+      console.log(`Fetching subcategories for category ${categoryId}`);
       const res = await axios.get(
-        `${API_URL}categories/${categoryId}/subcategories`
+        `${API_URL}/categories/${categoryId}/subcategories`
       );
-      if (res.data && Array.isArray(res.data)) {
-        setSubcategories((prev) => ({
-          ...prev,
-          [categoryId]: res.data,
-        }));
+
+      console.log(`Subcategories response for ${categoryId}:`, res.data);
+
+      if (Array.isArray(res.data)) {
+        setSubcategories((prev) => ({...prev, [categoryId]: res.data}));
       } else {
         console.error("Invalid subcategory data format:", res.data);
       }
     } catch (err) {
-      console.error("Failed to load subcategories:", err);
+      console.error(`Failed to load subcategories for ${categoryId}:`, err);
     } finally {
       setLoadingSubcategories(null);
     }
@@ -102,32 +131,39 @@ export default function CategoriesPage() {
 
   const handleSubcategoryClick = async (subcategoryId) => {
     if (expandedSubcategory === subcategoryId) {
-      setExpandedSubcategory(null);
+      setExpandedSubcategory(null); // Collapse if already selected
       return;
     }
 
-    setExpandedSubcategory(subcategoryId);
-    if (duas[subcategoryId]) return;
+    // If already fetched, just expand
+    if (duas[subcategoryId]) {
+      setExpandedSubcategory(subcategoryId);
+      return;
+    }
 
     setLoadingDuas(subcategoryId);
+    setExpandedSubcategory(subcategoryId);
 
     try {
       const res = await axios.get(
-        `${API_URL}subcategories/${subcategoryId}/duas`
+        `${API_URL}/subcategories/${subcategoryId}/duas`
       );
-      if (res.data && Array.isArray(res.data)) {
-        setDuas((prev) => ({
-          ...prev,
-          [subcategoryId]: res.data,
-        }));
+      console.log(`Duas response for ${subcategoryId}:`, res.data);
+
+      if (Array.isArray(res.data)) {
+        setDuas((prev) => ({...prev, [subcategoryId]: res.data}));
       } else {
         console.error("Invalid duas data format:", res.data);
       }
     } catch (err) {
-      console.error("Failed to load duas:", err);
+      console.error(`Failed to load duas for ${subcategoryId}:`, err);
     } finally {
       setLoadingDuas(null);
     }
+  };
+
+  const handleDuaClick = (dua) => {
+    setSelectedDua(dua);
   };
 
   const handleSearchChange = useCallback((e) => {
@@ -135,71 +171,64 @@ export default function CategoriesPage() {
   }, []);
 
   useEffect(() => {
-    if (!searchQuery || !searchQuery.trim()) {
+    if (!searchQuery.trim()) {
       setIsSearching(false);
       setSearchResults([]);
       return;
     }
 
-    const debounceTimer = setTimeout(() => {
+    const debounce = setTimeout(() => {
       setIsSearching(true);
       performSearch(searchQuery);
     }, 300);
 
-    return () => clearTimeout(debounceTimer);
+    return () => clearTimeout(debounce);
   }, [searchQuery]);
 
   const performSearch = async (query) => {
-    if (!query || !query.trim()) return;
+    if (!query.trim()) return;
 
     setLoading(true);
-
     try {
-      try {
-        const res = await axios.get(
-          `${API_URL}search?q=${encodeURIComponent(query)}`
-        );
-        if (res.data && Array.isArray(res.data)) {
-          setSearchResults(res.data);
-          setLoading(false);
-          return;
-        }
-      } catch (apiErr) {
-        console.log(
-          "API search not available, using client-side search",
-          apiErr
-        );
+      console.log(`Searching for: "${query}"`);
+      const res = await axios.get(
+        `${API_URL}/duas/search?q=${encodeURIComponent(query)}`
+      );
+
+      console.log("Search results:", res.data);
+
+      if (Array.isArray(res.data)) {
+        setSearchResults(res.data);
+        return;
       }
+    } catch (apiErr) {
+      console.log("Search API error:", apiErr);
+      console.log("Falling back to client-side search");
 
-      const results = [];
+      // Only do client-side search if we actually have duas loaded
+      const allDuasLoaded = Object.keys(duas).length > 0;
 
-      if (duas && Object.keys(duas).length > 0) {
-        Object.keys(duas).forEach((subcategoryId) => {
-          const subcategoryDuas = duas[subcategoryId];
-
-          if (subcategoryDuas && Array.isArray(subcategoryDuas)) {
-            const matches = subcategoryDuas.filter(
-              (dua) =>
-                dua &&
-                dua.name_en &&
-                typeof dua.name_en === "string" &&
-                dua.name_en.toLowerCase().includes(query.toLowerCase())
-            );
-
-            if (matches && matches.length > 0) {
-              results.push(...matches);
-            }
-          }
-        });
+      if (!allDuasLoaded) {
+        console.log("No duas loaded for client-side search");
+        setSearchResults([]);
+        setLoading(false);
+        return;
       }
-
-      setSearchResults(results);
-    } catch (err) {
-      console.error("Search error:", err);
-      setSearchResults([]);
-    } finally {
-      setLoading(false);
     }
+
+    // Client-side search fallback
+    const results = [];
+
+    Object.values(duas).forEach((duasList) => {
+      const matches = duasList.filter((dua) =>
+        dua?.name_en?.toLowerCase().includes(query.toLowerCase())
+      );
+      results.push(...matches);
+    });
+
+    console.log("Client-side search results:", results);
+    setSearchResults(results);
+    setLoading(false);
   };
 
   if (loading && !isSearching) {
@@ -214,121 +243,135 @@ export default function CategoriesPage() {
     <div className="flex min-h-screen bg-[#fafcfa]">
       <div className="w-full md:w-80 lg:w-96 border-r border-[#e7efe4] overflow-y-auto">
         <div className="p-4">
-          <div className="mb-4">
-            <div className="relative">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={handleSearchChange}
-                placeholder="Search duas..."
-                className="w-full px-4 py-2 pl-10 rounded-lg border border-[#e7efe4] focus:outline-none focus:ring-2 focus:ring-teal-700 focus:border-transparent bg-white shadow-sm transition-all duration-200"
-              />
-              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                <SearchIcon className="w-5 h-5" />
-              </span>
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery("")}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  ×
-                </button>
-              )}
-            </div>
+          <div className="mb-4 relative">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={handleSearchChange}
+              placeholder="Search duas..."
+              className="w-full px-4 py-2 pl-10 rounded-lg border border-[#e7efe4] focus:outline-none focus:ring-2 focus:ring-teal-700 focus:border-transparent bg-white shadow-sm"
+            />
+            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+              <SearchIcon className="w-5 h-5" />
+            </span>
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                ×
+              </button>
+            )}
           </div>
+
           {isSearching ? (
-            <div className="mb-4">
+            <div>
               <h3 className="font-medium text-gray-700 mb-2">Search Results</h3>
               {loading ? (
                 <p className="text-sm text-gray-500">Searching...</p>
               ) : searchResults.length === 0 ? (
-                <p className="text-sm text-gray-500">No results found</p>
+                <p className="text-sm text-gray-500">No results found.</p>
               ) : (
-                <div className="bg-white rounded-lg shadow-sm border border-[#e7efe4] p-2">
-                  {searchResults.map((dua, index) => (
-                    <div
-                      key={dua?.id || `search-result-${index}`}
-                      onClick={() => dua && setSelectedDua(dua)}
-                      className="py-2 px-3 hover:bg-gray-50 cursor-pointer rounded-md text-sm border-b border-gray-100 last:border-b-0"
+                <ul className="space-y-2">
+                  {searchResults.map((dua) => (
+                    <li
+                      key={dua.id}
+                      className="p-2 bg-white rounded-md shadow-sm hover:bg-gray-50 cursor-pointer"
+                      onClick={() => setSelectedDua(dua)}
                     >
-                      {dua?.name_en || "Unnamed Dua"}
-                    </div>
+                      {dua.name_en}
+                    </li>
                   ))}
-                </div>
+                </ul>
               )}
             </div>
           ) : (
-            <Accordion>
-              {categories.map((cat) => (
+            <Accordion type="multiple">
+              {categories.map((category) => (
                 <AccordionItem
-                  key={cat.id}
-                  aria-label={`Category ${cat.name_en}`}
-                  title={cat.name_en}
-                  onClick={() => handleCategoryClick(cat.id)}
+                  key={category.id}
+                  title={category.name_en}
+                  onClick={() => handleCategoryClick(category.id)}
                 >
-                  <div className="px-4 pb-3 pt-1 bg-gray-50">
-                    {loadingSubcategories === cat.id ? (
-                      <p className="text-sm text-gray-400">
-                        Loading subcategories...
-                      </p>
-                    ) : subcategories[cat.id] ? (
-                      <div className="space-y-2 text-gray-700">
-                        {subcategories[cat.id].map((sub) => (
+                  {loadingSubcategories === category.id ? (
+                    <p className="text-sm text-gray-500 p-2">
+                      Loading subcategories...
+                    </p>
+                  ) : (
+                    <div className="space-y-1 p-1">
+                      {(subcategories[category.id] || []).map((sub) => (
+                        <div key={sub.id} className="mb-2">
                           <div
-                            key={`${cat.id}-${sub.id}`}
-                            className="border-b border-gray-100 last:border-0"
+                            className={`flex items-center justify-between cursor-pointer p-2 hover:bg-gray-100 rounded ${
+                              expandedSubcategory === sub.id
+                                ? "bg-gray-100"
+                                : ""
+                            }`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSubcategoryClick(sub.id);
+                            }}
                           >
-                            <div
-                              className="flex items-center justify-between py-2 cursor-pointer hover:bg-gray-100 px-2 rounded"
-                              onClick={() => handleSubcategoryClick(sub.id)}
-                            >
-                              <span className="font-medium">{sub.name_en}</span>
-                              <span className="text-gray-400 text-xs">
-                                {expandedSubcategory === sub.id ? "▼" : ""}
-                              </span>
-                            </div>
-
-                            {loadingDuas === sub.id ? (
-                              <p className="text-xs text-gray-400 pl-4 py-1">
-                                Loading duas...
-                              </p>
+                            <span className="font-medium text-gray-700">
+                              {sub.name_en}
+                            </span>
+                            {expandedSubcategory === sub.id ? (
+                              <span className="text-gray-500 text-xs">▼</span>
                             ) : (
-                              expandedSubcategory === sub.id &&
-                              duas[sub.id] && (
-                                <div className="pl-4 py-2 space-y-2 bg-gray-50">
+                              <span className="text-gray-500 text-xs"></span>
+                            )}
+                          </div>
+
+                          {expandedSubcategory === sub.id && (
+                            <div className="ml-4 mt-1 border-l-2 border-gray-200">
+                              {loadingDuas === sub.id ? (
+                                <p className="text-sm text-gray-500 p-2">
+                                  Loading duas...
+                                </p>
+                              ) : duas[sub.id] && duas[sub.id].length > 0 ? (
+                                <div className="space-y-1">
                                   {duas[sub.id].map((dua) => (
                                     <div
                                       key={dua.id}
-                                      onClick={() => setSelectedDua(dua)}
-                                      className={`border-l-2 pl-3 py-1 hover:border-blue-300 hover:bg-gray-100 cursor-pointer ${
-                                        selectedDua && selectedDua.id === dua.id
-                                          ? "border-green-500 bg-green-50 text-green-700"
-                                          : "border-gray-200 text-blue-500"
+                                      className={`p-2 pl-4 cursor-pointer hover:bg-gray-50 ${
+                                        selectedDua?.id === dua.id
+                                          ? "bg-green-50 border-l-2 border-teal-700"
+                                          : ""
                                       }`}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDuaClick(dua);
+                                      }}
                                     >
                                       {dua.name_en}
                                     </div>
                                   ))}
                                 </div>
-                              )
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-gray-400">
-                        Click to load subcategories
-                      </p>
-                    )}
-                  </div>
+                              ) : (
+                                <p className="text-sm text-gray-500 p-2">
+                                  No duas found
+                                </p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </AccordionItem>
               ))}
             </Accordion>
           )}
         </div>
       </div>
-      <div className="flex-1 overflow-y-auto">
-        <MainContent selectedDua={selectedDua} />
+
+      <div className="flex-1 p-6 overflow-y-auto">
+        <MainContent
+          selectedDua={selectedDua}
+          expandedSubcategory={expandedSubcategory}
+          duas={duas}
+          loadingDuas={loadingDuas}
+        />
       </div>
     </div>
   );
