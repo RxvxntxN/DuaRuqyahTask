@@ -17,7 +17,6 @@ if (process.env.VERCEL) {
     console.log("Database copied to /tmp for Vercel deployment");
   }
 } else {
-  // Local development
   dbPath = "./dua_main.sqlite";
 }
 
@@ -28,7 +27,7 @@ try {
   console.log("Database connected successfully");
 } catch (err) {
   console.error("Database connection failed:", err);
-  // Don't exit process in production
+
   if (!process.env.VERCEL) {
     process.exit(1);
   }
