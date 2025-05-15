@@ -5,7 +5,8 @@ import axios from "axios";
 import {Accordion, AccordionItem} from "@heroui/react";
 import MainContent from "./MainContents";
 
-const API_URL = "/api/proxy?path=";
+// Update this to use the Next.js API routes directly
+const API_URL = "/api/";
 
 export const SearchIcon = (props) => {
   return (

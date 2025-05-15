@@ -37,6 +37,13 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  // Add the webpack customization here:
+  webpack: (config) => {
+    config.externals.push({
+      "better-sqlite3": "commonjs better-sqlite3",
+    });
+    return config;
+  },
 };
 
 module.exports = nextConfig;
