@@ -44,7 +44,7 @@ export const SearchIcon = (props) => (
   </svg>
 );
 
-export default function CategoriesPage() {
+export default function LeftCategory({forceShow = false}) {
   const [categories, setCategories] = useState([]);
   const [subcategories, setSubcategories] = useState({});
   const [duas, setDuas] = useState({});
@@ -240,7 +240,11 @@ export default function CategoriesPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#fafcfa]">
+    <div
+      className={`${
+        forceShow ? "block" : "hidden md:flex"
+      } min-h-screen bg-[#fafcfa]`}
+    >
       <div className="w-full md:w-80 lg:w-96 border-r border-[#e7efe4] overflow-y-auto">
         <div className="p-4">
           <div className="mb-4 relative">

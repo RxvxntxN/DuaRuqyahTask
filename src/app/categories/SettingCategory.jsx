@@ -1,4 +1,5 @@
 import React from "react";
+
 const SettingsItem = ({emoji, title}) => {
   return (
     <div className="flex items-center gap-3 text-[#607660] font-semibold text-base">
@@ -13,7 +14,7 @@ const SettingsItem = ({emoji, title}) => {
 const RightSidebar = () => {
   return (
     <aside
-      className="w-80 shrink-0 border-l border-[#e7efe4] bg-[#f7faf7] px-6 py-8 hidden lg:block"
+      className="hidden lg:block w-80 shrink-0 border-l border-[#e7efe4] bg-[#f7faf7] px-6 py-8"
       style={{minWidth: 320}}
     >
       <div className="space-y-3">

@@ -3,14 +3,12 @@
 const MainContent = ({selectedDua}) => {
   if (!selectedDua) {
     return (
-      <main className="flex-1 px-6 py-8 max-w-3xl mx-auto flex items-center justify-center h-full">
-        <div className="text-center text-gray-500"></div>
-      </main>
+      <div className="flex-1 px-6 py-8 max-w-3xl mx-auto flex items-center justify-center h-full"></div>
     );
   }
 
   return (
-    <main className="flex-1 px-6 py-8 max-w-3xl mx-auto">
+    <div className="flex-1 px-6 py-8 max-w-3xl mx-auto z-50">
       <div className="mb-7">
         <span className="block text-lg font-bold text-[#314331] mb-3">
           Translation
@@ -53,7 +51,7 @@ const MainContent = ({selectedDua}) => {
           </div>
         )}
       </div>
-    </main>
+    </div>
   );
 };
 
